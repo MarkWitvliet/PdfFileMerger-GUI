@@ -6,7 +6,6 @@ from subprocess import run
 import os
 FILEBROWSER_PATH = os.path.join(os.getenv('WINDIR'), 'explorer.exe')
 
-
 class PDFMerger(Frame):
 
     def __init__(self):
@@ -18,6 +17,7 @@ class PDFMerger(Frame):
         self.initUI()
 
     def load_config(self):
+        """ Create and load config file at first startup """
         if not os.path.exists(self.pdfmpath):
             try:
                 os.mkdir(pdfmpath)
@@ -33,13 +33,15 @@ class PDFMerger(Frame):
             self.parser.set("settings", "filename", "merged_pdfs")
             with open(f"{self.pdfmpath}\config.ini", "w") as configfile:
                 self.parser.write(configfile)
-            # self.config = self.parser.read("config.ini")
 
     def settings(self):
         """ Settings window """
         win = Toplevel(self.master)
         win.title("Settings")
-        win.geometry("580x230")
+        x = int((self.master.winfo_x()) - (580/2)) + int(self.master.winfo_width()/2)
+        y = int((self.master.winfo_y()) - (230/2)) + int(self.master.winfo_height()/2)
+        win.geometry(f"580x230+{x}+{y}")
+        win.resizable(False,False)
         # filler rows
         emptyLabel1 = Label(win, text=" ")
         emptyLabel1.grid(row=0, column=0)
@@ -104,12 +106,14 @@ class PDFMerger(Frame):
         """ About window """
         win_about = Toplevel(self.master)
         win_about.title("About")
-        win_about.geometry("200x100")
+        x = int((self.master.winfo_x()) - (200/2)) + int(self.master.winfo_width()/2)
+        y = int((self.master.winfo_y()) - (100/2)) + int(self.master.winfo_height()/2)
+        win_about.geometry(f"200x100+{x}+{y}")
+        win_about.resizable(False,False)
         # labels
         spacerLabel= Label(win_about, text="")
         aboutLabel1 = Label(win_about, text="PDF Merger", justify="center", font="Helvetica 11 bold")
-        aboutLabel2 = Label(win_about, text="Version: 0.1\nAuthor: Mark Witvliet", justify="center", font="Helvetica 10")
-        # aboutLabel.config(spacing1=3)
+        aboutLabel2 = Label(win_about, text="Version: 0.2\nAuthor: Mark Witvliet", justify="center", font="Helvetica 10")
         spacerLabel.pack()
         aboutLabel1.pack()
         aboutLabel2.pack()
@@ -121,7 +125,6 @@ class PDFMerger(Frame):
         """ Open files, insert in listbox"""
         filepaths = filedialog.askopenfilenames(initialdir=self.parser.get("settings", "inputdir"), title="Select a pdf file", filetypes=(("pdf files","*.pdf"), ("all files","*.*")))
         PDFMerger.filepaths = [*PDFMerger.filepaths, *filepaths]
-        # output = Label(root, text=root.filename).grid(row=4, column=0)
         filenames = []
         for filename in filepaths:
             new_filename = filename.split("/")[-1]
@@ -140,8 +143,7 @@ class PDFMerger(Frame):
                 PDFMerger.pdf_listbox.delete(pos)
                 PDFMerger.filepaths.pop(pos)
         except Exception as e:
-            print(e)
-            return
+            messagebox.showerror(title="Error!", message=e)
 
     def clear(self):
         """ Clear all items in listbox """
@@ -186,7 +188,7 @@ class PDFMerger(Frame):
             merger.write(sdir)
             merger.close()
         except Exception as e:
-            print(e)
+            messagebox.showerror(title="Error!", message=e)
         self.filenameEntry.delete(0, 'end')
         self.filenameEntry.insert(END, self.parser.get("settings", "filename"))
         self.clear()
@@ -207,8 +209,7 @@ class PDFMerger(Frame):
                 PDFMerger.pdf_listbox.selection_set(pos-1)
                 PDFMerger.filepaths.insert(pos-1, PDFMerger.filepaths.pop(pos))
         except Exception as e:
-            print(e)
-            pass
+            messagebox.showerror(title="Error!", message=e)
 
     def move_down(self, *args):
         """ Moves the item at position pos down by one """
@@ -225,8 +226,7 @@ class PDFMerger(Frame):
                 PDFMerger.pdf_listbox.selection_set(pos+1)
                 PDFMerger.filepaths.insert(pos+1, PDFMerger.filepaths.pop(pos))
         except Exception as e:
-            print(e)
-            pass
+            messagebox.showerror(title="Error!", message=e)
 
     def explore(self, path):
         """ explore path """
@@ -290,7 +290,9 @@ class PDFMerger(Frame):
 
 def main():
     root = Tk()
-    root.geometry("600x400+400+400")
+    x = int((root.winfo_screenwidth()/2) - (600/2))
+    y = int((root.winfo_screenheight()/2) - (400/2))
+    root.geometry(f"600x400+{x}+{y}")
     app = PDFMerger()
     root.mainloop()
 
