@@ -3,7 +3,7 @@ from tkinter.ttk import Frame, Button, Label, Style
 from configparser import ConfigParser
 from PyPDF2 import PdfFileMerger
 from subprocess import run
-import os
+import sys, os
 FILEBROWSER_PATH = os.path.join(os.getenv('WINDIR'), 'explorer.exe')
 
 class PDFMerger(Frame):
@@ -20,16 +20,22 @@ class PDFMerger(Frame):
         """ Create and load config file at first startup """
         if not os.path.exists(self.pdfmpath):
             try:
-                os.mkdir(pdfmpath)
-            except OSError:
-                print(f"Creation of directory {pdfmpath} failed")
+                os.mkdir(self.pdfmpath)
+            except OSError as e:
+                print(f"Creation of directory {self.pdfmpath} failed")
+                print(e)
+                messagebox.showerror(title="Error!", message=e)
         try:
             with open(f'{self.pdfmpath}\config.ini') as f:
                 self.config = self.parser.read_file(f)
         except IOError:
             self.parser.add_section("settings")
-            self.parser.set("settings", "inputdir", os.path.abspath(path.dirname(__file__))) #os.getcwd()
-            self.parser.set("settings", "outputdir", os.path.abspath(path.dirname(__file__))) #os.getcwd()
+            if getattr(sys, 'frozen', False):
+                self.parser.set("settings", "inputdir", os.path.dirname(sys.executable))
+                self.parser.set("settings", "outputdir", os.path.dirname(sys.executable))
+            else:
+                self.parser.set("settings", "inputdir", os.path.abspath(os.path.dirname(__file__)))
+                self.parser.set("settings", "outputdir", os.path.abspath(os.path.dirname(__file__)))
             self.parser.set("settings", "filename", "merged_pdfs")
             with open(f"{self.pdfmpath}\config.ini", "w") as configfile:
                 self.parser.write(configfile)
